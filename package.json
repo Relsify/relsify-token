@@ -1,0 +1,29 @@
+{
+  "name": "relsify-token",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Relsify/relsify-token.git"
+  },
+  "author": "Ifedayo Karim",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Relsify/relsify-token/issues"
+  },
+  "homepage": "https://github.com/Relsify/relsify-token#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.3.3",
+    "openzeppelin-old": "npm:@openzeppelin/contracts@^2.5.1"
+  },
+  "devDependencies": {
+    "ethereum-waffle": "^3.4.0"
+  }
+}
