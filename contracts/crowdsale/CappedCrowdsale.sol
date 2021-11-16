@@ -8,7 +8,7 @@ import "./Crowdsale.sol";
  * @title CappedCrowdsale
  * @dev Crowdsale with a limit for total contributions.
  */
-contract CappedCrowdsale is Crowdsale {
+abstract contract CappedCrowdsale is Crowdsale {
     using SafeMath for uint256;
 
     uint256 private _cap;

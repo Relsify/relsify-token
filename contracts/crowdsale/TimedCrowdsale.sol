@@ -9,7 +9,7 @@ import "./Crowdsale.sol";
  * @title TimedCrowdsale
  * @dev Crowdsale accepting contributions only within a time frame.
  */
-contract TimedCrowdsale is Crowdsale, Ownable {
+abstract contract TimedCrowdsale is Ownable, Crowdsale {
     using SafeMath for uint256;
 
     uint256 private _openingTime;

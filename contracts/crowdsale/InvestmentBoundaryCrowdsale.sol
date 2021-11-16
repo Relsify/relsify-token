@@ -3,7 +3,7 @@ pragma solidity  >=0.8.10 <0.9.0;
 
 import "./Crowdsale.sol";
 
-contract InvestmentBoundaryCrowdsale is Crowdsale {
+abstract contract InvestmentBoundaryCrowdsale is Crowdsale {
     uint256 private minInvestment; // minimum investment amount in wei
     uint256 private maxInvestment; // maximum investment amount in wei
 
