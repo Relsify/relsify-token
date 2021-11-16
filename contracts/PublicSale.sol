@@ -35,7 +35,6 @@ contract PublicSale is Crowdsale, Ownable {
         _;
     }
 
-
     constructor(
         uint256 rate,            // rate, in TKNbits
         address payable wallet,  // wallet to send Ether

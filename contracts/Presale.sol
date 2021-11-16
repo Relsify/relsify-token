@@ -4,10 +4,15 @@ pragma solidity  >=0.8.10 <0.9.0;
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./crowdsale/Crowdsale.sol";
 
 contract Presale is Crowdsale, Ownable {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
+
+     // The token being sold
+    IERC20 private _token;
 
     // Cap
     uint256 private _cap; // the cap for the crowdsale in wei
@@ -19,6 +24,7 @@ contract Presale is Crowdsale, Ownable {
     // Investment Boundary
     uint256 private _minimumContribution; // minimum contribution in wei
     uint256 private _maximumContribution; // maximum contribution in wei
+    mapping(address => uint256) public contributions;
 
     /**
      * Event for crowdsale extending
@@ -34,7 +40,6 @@ contract Presale is Crowdsale, Ownable {
         require(isOpen(), "TimedCrowdsale: not open");
         _;
     }
-
 
     constructor(
         uint256 rate,            // rate, in TKNbits
@@ -60,6 +65,7 @@ contract Presale is Crowdsale, Ownable {
         _cap = theCap;
         _openingTime = theOpeningTime;
         _closingTime = theClosingTime;
+        _token = token;
     }
 
     //Timed
@@ -150,11 +156,39 @@ contract Presale is Crowdsale, Ownable {
     function _preValidatePurchase(address beneficiary, uint256 weiAmount) internal override onlyWhileOpen view {
         super._preValidatePurchase(beneficiary, weiAmount);
         require(weiRaised().add(weiAmount) <= _cap, "CappedCrowdsale: cap exceeded");
-        super._preValidatePurchase(beneficiary, weiAmount);
+        uint256 _totalContibutorContribution = getTotalContibutorContribution(beneficiary, weiAmount);
         // solhint-disable-next-line max-line-length
-        require(weiAmount >= _minimumContribution , "Amount must be greater than or equal to minimum contribution");
-        // solhint-disable-next-line max-line-length
-        require(weiAmount <= _maximumContribution , "Amount must be less than or equal to maximum contribution");
+        require(_totalContibutorContribution >= _minimumContribution && _totalContibutorContribution <= _maximumContribution, "Contribution must be between minimum and maximum");
+    }
+
+    /**
+     * @dev Extend current user contributions
+     * @param beneficiary Address receiving the tokens
+     * @param weiAmount Value in wei involved in the purchase
+     */
+    function _updatePurchasingState(address beneficiary, uint256 weiAmount) override internal {
+        contributions[beneficiary] = getTotalContibutorContribution(beneficiary, weiAmount);
+    }
+
+    /**
+     * @dev Extend parent behavior to reset user contributions
+     * @param beneficiary Address receiving the tokens
+     * @param weiAmount Value in wei involved in the purchase
+     */
+    function getTotalContibutorContribution(address beneficiary, uint256 weiAmount) internal  view returns (uint256) {
+        uint256 _existingContribution = contributions[beneficiary];
+        uint256 _totalContibutorContribution = _existingContribution.add(weiAmount);
+        return _totalContibutorContribution;
+    }
+
+    /**
+     * @dev Source of tokens. Override this method to modify the way in which the crowdsale ultimately gets and sends
+     * its tokens.
+     * @param beneficiary Address performing the token purchase
+     * @param tokenAmount Number of tokens to be emitted
+     */
+    function _deliverTokens(address beneficiary, uint256 tokenAmount) internal override(Crowdsale) {
+        _token.safeTransfer(beneficiary, tokenAmount);
     }
 
     /**
