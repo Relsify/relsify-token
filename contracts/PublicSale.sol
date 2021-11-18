@@ -19,6 +19,7 @@ contract PublicSale is Crowdsale, Ownable {
     // Investment Boundary
     uint256 private _minimumContribution; // minimum contribution in wei
     uint256 private _maximumContribution; // maximum contribution in wei
+    mapping(address => uint256) private contributions; // mapping of address to contribution in wei
 
     /**
      * Event for crowdsale extending
@@ -149,11 +150,37 @@ contract PublicSale is Crowdsale, Ownable {
     function _preValidatePurchase(address beneficiary, uint256 weiAmount) internal override onlyWhileOpen view {
         super._preValidatePurchase(beneficiary, weiAmount);
         require(weiRaised().add(weiAmount) <= _cap, "CappedCrowdsale: cap exceeded");
-        super._preValidatePurchase(beneficiary, weiAmount);
+        uint256 _totalContibutorContribution = _getTotalContibutorContribution(beneficiary, weiAmount);
         // solhint-disable-next-line max-line-length
-        require(weiAmount >= _minimumContribution , "Amount must be greater than or equal to minimum contribution");
-        // solhint-disable-next-line max-line-length
-        require(weiAmount <= _maximumContribution , "Amount must be less than or equal to maximum contribution");
+        require(_totalContibutorContribution >= _minimumContribution && _totalContibutorContribution <= _maximumContribution, "Contribution must be between minimum and maximum");
+    }
+
+    /**
+     * @dev Extend current user contributions
+     * @param beneficiary Address receiving the tokens
+     * @param weiAmount Value in wei involved in the purchase
+     */
+    function _updatePurchasingState(address beneficiary, uint256 weiAmount) override internal {
+        contributions[beneficiary] = _getTotalContibutorContribution(beneficiary, weiAmount);
+    }
+
+    /**
+     * @dev Extend parent behavior to reset user contributions
+     * @param beneficiary Address receiving the tokens
+     * @param weiAmount Value in wei involved in the purchase
+     */
+    function _getTotalContibutorContribution(address beneficiary, uint256 weiAmount) internal  view returns (uint256) {
+        uint256 _existingContribution = contributions[beneficiary];
+        uint256 _totalContibutorContribution = _existingContribution.add(weiAmount);
+        return _totalContibutorContribution;
+    }
+
+    /**
+     * @dev Get the amount contributed by a user
+     */
+
+    function contributedAmount () public view returns (uint256) {
+        return contributions[msg.sender];
     }
 
     /**
