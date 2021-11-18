@@ -149,6 +149,24 @@ contract TokenVesting is Ownable {
     }
 
     /**
+     * @notice Returns the amount of tokens that can be released.
+     * @param token ERC20 token which is being vested
+     * @return the amount of tokens that can be released
+     */
+    function releasableAmount(IERC20 token) public view returns (uint256) {
+        return _releasableAmount(token);
+    }
+    
+    /**
+     * @notice Returns the amount of tokens that can be released.
+     * @param token ERC20 token which is being vested
+     * @return the amount of tokens that can be released
+     */
+    function vestedAmount(IERC20 token) public view returns (uint256) {
+        return _vestedAmount(token);
+    }
+
+    /**
      * @dev Calculates the amount that has already vested but hasn't been released yet.
      * @param token ERC20 token which is being vested
      */
