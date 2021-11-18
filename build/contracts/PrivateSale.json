@@ -1,0 +1,191 @@
+{
+  "contractName": "PrivateSale",
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.8.9+commit.e5eed63a\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"project:/contracts/PrivateSale.sol\":\"PrivateSale\"},\"evmVersion\":\"london\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"project:/contracts/PrivateSale.sol\":{\"keccak256\":\"0x865853341e8f5b7c22ffd511e5ee03ab9f03239ec87f938354021ef3d5ed000d\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://fbb4259eec455ab0b12fdf2e2a92c03435353fdb93e2597f8e20eec102099c12\",\"dweb:/ipfs/QmVpCwmnsBsF5k5ZEheR2SCR3yMycQ5R2mGEX7PfzqoM67\"]}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220eabde316b27326d21f3576758905e7a5d1c2750e761bc404dd82f5170bf586ae64736f6c63430008090033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220eabde316b27326d21f3576758905e7a5d1c2750e761bc404dd82f5170bf586ae64736f6c63430008090033",
+  "immutableReferences": {},
+  "generatedSources": [],
+  "deployedGeneratedSources": [],
+  "sourceMap": "58:52:19:-:0;;;85:23;;;;;;;;;;58:52;;;;;;",
+  "deployedSourceMap": "58:52:19:-:0;;;;;",
+  "source": "// SPDX-License-Identifier: MIT\npragma solidity  ^0.8.0;\n\ncontract PrivateSale {\n    constructor () {\n\n    }\n}",
+  "sourcePath": "/home/light/relsify-token/contracts/PrivateSale.sol",
+  "ast": {
+    "absolutePath": "project:/contracts/PrivateSale.sol",
+    "exportedSymbols": {
+      "PrivateSale": [
+        3162
+      ]
+    },
+    "id": 3163,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 3157,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "32:24:19"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "PrivateSale",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "id": 3162,
+        "linearizedBaseContracts": [
+          3162
+        ],
+        "name": "PrivateSale",
+        "nameLocation": "67:11:19",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 3160,
+              "nodeType": "Block",
+              "src": "100:8:19",
+              "statements": []
+            },
+            "id": 3161,
+            "implemented": true,
+            "kind": "constructor",
+            "modifiers": [],
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 3158,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "97:2:19"
+            },
+            "returnParameters": {
+              "id": 3159,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "100:0:19"
+            },
+            "scope": 3162,
+            "src": "85:23:19",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "scope": 3163,
+        "src": "58:52:19",
+        "usedErrors": []
+      }
+    ],
+    "src": "32:78:19"
+  },
+  "legacyAST": {
+    "absolutePath": "project:/contracts/PrivateSale.sol",
+    "exportedSymbols": {
+      "PrivateSale": [
+        3162
+      ]
+    },
+    "id": 3163,
+    "license": "MIT",
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 3157,
+        "literals": [
+          "solidity",
+          "^",
+          "0.8",
+          ".0"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "32:24:19"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "canonicalName": "PrivateSale",
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "fullyImplemented": true,
+        "id": 3162,
+        "linearizedBaseContracts": [
+          3162
+        ],
+        "name": "PrivateSale",
+        "nameLocation": "67:11:19",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "body": {
+              "id": 3160,
+              "nodeType": "Block",
+              "src": "100:8:19",
+              "statements": []
+            },
+            "id": 3161,
+            "implemented": true,
+            "kind": "constructor",
+            "modifiers": [],
+            "name": "",
+            "nameLocation": "-1:-1:-1",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 3158,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "97:2:19"
+            },
+            "returnParameters": {
+              "id": 3159,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "100:0:19"
+            },
+            "scope": 3162,
+            "src": "85:23:19",
+            "stateMutability": "nonpayable",
+            "virtual": false,
+            "visibility": "public"
+          }
+        ],
+        "scope": 3163,
+        "src": "58:52:19",
+        "usedErrors": []
+      }
+    ],
+    "src": "32:78:19"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.8.9+commit.e5eed63a.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.4.3",
+  "updatedAt": "2021-11-18T11:03:14.235Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}

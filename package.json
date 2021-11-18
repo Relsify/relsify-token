@@ -21,7 +21,9 @@
   "homepage": "https://github.com/Relsify/relsify-token#readme",
   "dependencies": {
     "@openzeppelin/contracts": "^4.3.3",
-    "openzeppelin-old": "npm:@openzeppelin/contracts@^2.5.1"
+    "dotenv": "^10.0.0",
+    "openzeppelin-old": "npm:@openzeppelin/contracts@^2.5.1",
+    "web3": "^1.6.1"
   },
   "devDependencies": {
     "ethereum-waffle": "^3.4.0"
