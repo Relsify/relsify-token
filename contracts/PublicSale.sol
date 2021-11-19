@@ -2,12 +2,18 @@
 pragma solidity  ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./crowdsale/Crowdsale.sol";
 
 contract PublicSale is Crowdsale, Ownable {
     using SafeMath for uint256;
+    using SafeERC20 for IERC20;
+
+    // The Token wallet
+    address private _tokenWallet;
 
     // Cap
     uint256 private _cap; // the cap for the crowdsale in wei
@@ -40,6 +46,7 @@ contract PublicSale is Crowdsale, Ownable {
         uint256 rate,            // rate, in TKNbits
         address payable wallet,  // wallet to send Ether
         IERC20 token,            // the token
+        address theTokenWallet, // The wallet to send the tokens from
         uint256 theCap,             // total cap, in wei
         uint256 theOpeningTime,     // opening time in unix epoch seconds
         uint256 theClosingTime,      // closing time in unix epoch seconds
@@ -55,6 +62,8 @@ contract PublicSale is Crowdsale, Ownable {
         require(theClosingTime > theOpeningTime, "TimedCrowdsale: opening time is not before closing time");
         // solhint-disable-next-line max-line-length
         require(theMinimumContribution <= theMaximumContribution, "Minimum contribution must be less than or equal to maximum contribution");
+        require(theTokenWallet != address(0), "AllowanceCrowdsale: token wallet is the zero address");
+        _tokenWallet = theTokenWallet;
         _minimumContribution = theMinimumContribution;
         _maximumContribution = theMaximumContribution;
         _cap = theCap;
@@ -124,6 +133,23 @@ contract PublicSale is Crowdsale, Ownable {
         return weiRaised() >= _cap;
     }
 
+    // TOKEN WALLET
+
+    /**
+     * @return the address of the wallet that will hold the tokens.
+     */
+    function tokenWallet() public view returns (address) {
+        return _tokenWallet;
+    }
+
+    /**
+     * @dev Checks the amount of tokens left in the allowance.
+     * @return Amount of tokens left in the allowance
+     */
+    function remainingTokens() public view returns (uint256) {
+        return Math.min(token().balanceOf(_tokenWallet), token().allowance(_tokenWallet, address(this)));
+    }
+
     // Investment Boundary
 
     /**
@@ -140,6 +166,14 @@ contract PublicSale is Crowdsale, Ownable {
      */
     function setMaximumContribution(uint256 maximumContribution) public onlyOwner {
         _maximumContribution = maximumContribution;
+    }
+
+     /**
+     * @dev Get the amount contributed by a user
+     */
+
+    function contributedAmount () public view returns (uint256) {
+        return contributions[msg.sender];
     }
 
     /**
@@ -175,12 +209,15 @@ contract PublicSale is Crowdsale, Ownable {
         return _totalContibutorContribution;
     }
 
-    /**
-     * @dev Get the amount contributed by a user
+     /**
+     * @dev Source of tokens. Override this method to modify the way in which the crowdsale ultimately gets and sends
+     * its tokens.
+     * Transfer tokens to the user Token vesting contract
+     * @param beneficiary Address performing the token purchase
+     * @param tokenAmount Number of tokens to be emitted
      */
-
-    function contributedAmount () public view returns (uint256) {
-        return contributions[msg.sender];
+    function _deliverTokens(address beneficiary, uint256 tokenAmount) internal override(Crowdsale) {
+        token().safeTransferFrom(_tokenWallet, beneficiary, tokenAmount);
     }
 
     /**

@@ -26,7 +26,6 @@ const presaleConfig = {
     startTime: parseTimeForContract(new Date(2021, 11, 11, 23)),
     cliffDuration: (60 * 60) * 24 * 7 * 2, // 2 weeks
     duration: (60 * 60) * 24 * 60, // 60 days
-    isRevocable: false
   }
 }
 
@@ -57,6 +56,7 @@ module.exports = async function (deployer, network, accounts) {
     presaleConfig.rate, // the rate in TKNbits
     presaleConfig.wallet, //wallet that will recieve ether
     relsifyToken.address, // Relsify token address
+    accounts[0],
     presaleConfig.cap,
     presaleConfig.openingTime,
     presaleConfig.closingTime,
@@ -65,7 +65,6 @@ module.exports = async function (deployer, network, accounts) {
     presaleConfig.vesting.startTime,
     presaleConfig.vesting.cliffDuration,
     presaleConfig.vesting.duration,
-    presaleConfig.vesting.isRevocable
   )
 
   //Get the presale instance
@@ -80,6 +79,7 @@ module.exports = async function (deployer, network, accounts) {
     publicSaleConfig.rate,
     publicSaleConfig.wallet,
     relsifyToken.address,
+    accounts[0],
     publicSaleConfig.cap,
     publicSaleConfig.openingTime,
     publicSaleConfig.closingTime,

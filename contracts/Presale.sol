@@ -2,6 +2,7 @@
 pragma solidity  ^0.8.0;
 
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -12,8 +13,8 @@ contract Presale is Crowdsale, Ownable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-     // The token being sold
-    IERC20 private _token;
+    // The Token wallet
+    address private _tokenWallet;
 
     // Cap
     uint256 private _cap; // the cap for the crowdsale in wei
@@ -28,11 +29,13 @@ contract Presale is Crowdsale, Ownable {
     mapping(address => uint256) private contributions; // mapping of address to contribution in wei
 
     //Token vesting account
-    uint256 private _tokenVestingStartTime;
-    uint256 private _tokenVestingCliffDuration;
-    uint256 private _tokenVestingDuration;
-    bool private _tokenVestingIsRevocable;
     mapping(address => TokenVesting) private vestings; // mapping of address to token vesting
+    struct TokenVestingConfig { 
+        uint256  startTime;
+        uint256  cliffDuration;
+        uint256  duration;
+    }
+    TokenVestingConfig private _tokenVestingConfig;
 
     /**
      * Event for crowdsale extending
@@ -53,6 +56,7 @@ contract Presale is Crowdsale, Ownable {
         uint256 rate,            // rate, in TKNbits
         address payable wallet,  // wallet to send Ether
         IERC20 token,            // the token
+        address theTokenWallet, // The wallet to send the tokens from
         uint256 theCap,             // total cap, in wei
         uint256 theOpeningTime,     // opening time in unix epoch seconds
         uint256 theClosingTime,      // closing time in unix epoch seconds
@@ -60,8 +64,7 @@ contract Presale is Crowdsale, Ownable {
         uint256 theMaximumContribution, // maximum contribution in wei
         uint256 theTokenVestingStartTime, // token vesting start time in unix epoch seconds
         uint256 theTokenVestingCliffDuration, // token vesting cliff duration in seconds
-        uint256 theTokenVestingDuration, // token vesting duration in seconds
-        bool theTokenVestingIsRevocable // token vesting is revocable
+        uint256 theTokenVestingDuration // token vesting duration in seconds
     )
         Crowdsale(rate, wallet, token)
     {
@@ -75,17 +78,18 @@ contract Presale is Crowdsale, Ownable {
         require(theTokenVestingCliffDuration <= theTokenVestingDuration, "TokenVesting: cliff is longer than duration");
         require(theTokenVestingDuration > 0, "TokenVesting: duration is 0");
         require(theTokenVestingStartTime.add(theTokenVestingDuration) > block.timestamp, "TokenVesting: final time is before current time");
+        require(theTokenWallet != address(0), "AllowanceCrowdsale: token wallet is the zero address");
         _minimumContribution = theMinimumContribution;
         _maximumContribution = theMaximumContribution;
         _cap = theCap;
         _openingTime = theOpeningTime;
         _closingTime = theClosingTime;
-        _token = token;
-        _tokenVestingStartTime = theTokenVestingStartTime;
-        _tokenVestingDuration = theTokenVestingDuration;
-        _tokenVestingCliffDuration = theTokenVestingCliffDuration;
-        _tokenVestingIsRevocable = theTokenVestingIsRevocable;
-
+        _tokenWallet = theTokenWallet;
+        _tokenVestingConfig = TokenVestingConfig(
+            theTokenVestingStartTime,
+            theTokenVestingCliffDuration, 
+            theTokenVestingDuration
+        );
     }
 
     //Timed
@@ -148,6 +152,23 @@ contract Presale is Crowdsale, Ownable {
      */
     function capReached() public view returns (bool) {
         return weiRaised() >= _cap;
+    }
+
+    // TOKEN WALLET
+
+    /**
+     * @return the address of the wallet that will hold the tokens.
+     */
+    function tokenWallet() public view returns (address) {
+        return _tokenWallet;
+    }
+
+    /**
+     * @dev Checks the amount of tokens left in the allowance.
+     * @return Amount of tokens left in the allowance
+     */
+    function remainingTokens() public view returns (uint256) {
+        return Math.min(token().balanceOf(_tokenWallet), token().allowance(_tokenWallet, address(this)));
     }
 
     // Investment Boundary
@@ -221,7 +242,7 @@ contract Presale is Crowdsale, Ownable {
     * @return the token vesting start time.
     */
      function tokenVestingStartTime() public view returns (uint256) {
-        return _tokenVestingStartTime;
+        return _tokenVestingConfig.startTime;
      }
 
     /**
@@ -229,7 +250,7 @@ contract Presale is Crowdsale, Ownable {
     * @return the token vesting duration.
     */
      function tokenVestingDuration() public view returns (uint256) {
-        return _tokenVestingDuration;
+        return _tokenVestingConfig.duration;
      }
 
     /**
@@ -237,15 +258,7 @@ contract Presale is Crowdsale, Ownable {
     * @return the token vesting cliff duration.
     */
      function tokenVestingCliffDuration() public view returns (uint256) {
-        return _tokenVestingCliffDuration;
-     }
-
-    /**
-    * @dev Returns the token vesting is revocable.
-    * @return the token vesting is revocable.
-    */
-     function tokenVestingIsRevocable() public view returns (bool) {
-        return _tokenVestingIsRevocable;
+        return _tokenVestingConfig.cliffDuration;
      }
 
     /**
@@ -254,7 +267,7 @@ contract Presale is Crowdsale, Ownable {
     */
      function tokensVestedReleased() public view onlyWhenTokenVestingIsSet returns (uint256) {
         TokenVesting vesting = TokenVesting(vestings[msg.sender]);
-        return vesting.released(address(_token));
+        return vesting.released(address(token()));
      }
 
     /**
@@ -263,7 +276,7 @@ contract Presale is Crowdsale, Ownable {
     */
      function tokensReleasableAmount () public view onlyWhenTokenVestingIsSet returns (uint256) {
         TokenVesting vesting = TokenVesting(vestings[msg.sender]);
-        return vesting.releasableAmount(_token);
+        return vesting.releasableAmount(token());
      }
 
     /**
@@ -272,7 +285,7 @@ contract Presale is Crowdsale, Ownable {
     */
      function tokensVestedAmount() public view onlyWhenTokenVestingIsSet returns (uint256) {
         TokenVesting vesting = TokenVesting(vestings[msg.sender]);
-        return vesting.vestedAmount(_token);
+        return vesting.vestedAmount(token());
      }
 
     /**
@@ -294,7 +307,7 @@ contract Presale is Crowdsale, Ownable {
      */
     function releaseTokenVested() public onlyWhenTokenVestingIsSet {
         TokenVesting vesting = TokenVesting(vestings[msg.sender]);
-        vesting.release(_token);
+        vesting.release(token());
     }
 
     /**
@@ -302,7 +315,13 @@ contract Presale is Crowdsale, Ownable {
      */
     function _setTokenVesting() internal  {
         require(address(vestings[msg.sender]) == address(0), "Token vesting already set");
-        TokenVesting vesting = new TokenVesting(msg.sender, _tokenVestingStartTime, _tokenVestingCliffDuration, _tokenVestingDuration, _tokenVestingIsRevocable);
+        TokenVesting vesting = new TokenVesting(
+            msg.sender,
+             _tokenVestingConfig.startTime,
+            _tokenVestingConfig.cliffDuration,
+            _tokenVestingConfig.duration,
+            false
+            );
         vestings[msg.sender] = vesting;
     }
 
@@ -318,7 +337,7 @@ contract Presale is Crowdsale, Ownable {
             _setTokenVesting();
         }
         TokenVesting vesting = TokenVesting(vestings[beneficiary]);
-        _token.safeTransfer(address(vesting), tokenAmount);
+        token().safeTransferFrom(_tokenWallet, address(vesting), tokenAmount);
     }
 
     /**
