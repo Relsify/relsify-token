@@ -1,4 +1,4 @@
 const web3 = require('web3');
 
-
-console.log(web3.utils.toWei('400', 'ether'))
+const { isBN, BN} = web3.utils;
+console.log(new BN('4000000000').add(new BN(1)).toNumber())

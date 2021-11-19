@@ -87,7 +87,7 @@ contract RelsifyToken is ERC20, ERC20Burnable, Pausable, AccessControl {
     }
 
     function mint(address to, uint256 amount) public onlyRole(MINTER_ROLE) {
-        require(totalSupply() + amount <= cap(), "Capped: cap exceeded");
+        require(totalSupply() + amount <= cap(), "Cap exceeded");
         _mint(to, amount);
     }
 
