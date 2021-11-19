@@ -25,5 +25,4 @@ describe('Basic token test', () => {
     it('Token should have symbol RELS', async () => {
         expect(await token.symbol()).to.equal('RELS');
     });
-
 });
