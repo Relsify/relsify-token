@@ -34,6 +34,7 @@ contract Presale is Crowdsale, Ownable {
         uint256  startTime;
         uint256  cliffDuration;
         uint256  duration;
+        uint256 cliff;
     }
     TokenVestingConfig private _tokenVestingConfig;
 
@@ -48,7 +49,7 @@ contract Presale is Crowdsale, Ownable {
      * @dev Reverts if not in crowdsale time range.
      */
     modifier onlyWhileOpen {
-        require(isOpen(), "TimedCrowdsale: not open");
+        require(isOpen(), "Crowdsale not open");
         _;
     }
 
@@ -68,17 +69,17 @@ contract Presale is Crowdsale, Ownable {
     )
         Crowdsale(rate, wallet, token)
     {
-        require(theCap > 0, "CappedCrowdsale: cap is 0");
+        require(theCap > 0, "Crowdsale cap is 0");
         // solhint-disable-next-line not-rely-on-time
-        require(theOpeningTime >= block.timestamp, "TimedCrowdsale: opening time is before current time");
+        require(theOpeningTime >= block.timestamp, "Opening time is before current time");
         // solhint-disable-next-line max-line-length
-        require(theClosingTime > theOpeningTime, "TimedCrowdsale: opening time is not before closing time");
+        require(theClosingTime > theOpeningTime, "Opening time is not before closing time");
         // solhint-disable-next-line max-line-length
         require(theMinimumContribution <= theMaximumContribution, "Minimum contribution must be less than or equal to maximum contribution");
-        require(theTokenVestingCliffDuration <= theTokenVestingDuration, "TokenVesting: cliff is longer than duration");
-        require(theTokenVestingDuration > 0, "TokenVesting: duration is 0");
-        require(theTokenVestingStartTime.add(theTokenVestingDuration) > block.timestamp, "TokenVesting: final time is before current time");
-        require(theTokenWallet != address(0), "AllowanceCrowdsale: token wallet is the zero address");
+        require(theTokenVestingCliffDuration <= theTokenVestingDuration, "Token vesting cliff is longer than duration");
+        require(theTokenVestingDuration > 0, "Token vesting duration is 0");
+        require(theTokenVestingStartTime.add(theTokenVestingDuration) > block.timestamp, "Final vesting time is before current time");
+        require(theTokenWallet != address(0), "Token wallet is the zero address");
         _minimumContribution = theMinimumContribution;
         _maximumContribution = theMaximumContribution;
         _cap = theCap;
@@ -88,7 +89,8 @@ contract Presale is Crowdsale, Ownable {
         _tokenVestingConfig = TokenVestingConfig(
             theTokenVestingStartTime,
             theTokenVestingCliffDuration, 
-            theTokenVestingDuration
+            theTokenVestingDuration,
+            theTokenVestingStartTime.add(theTokenVestingCliffDuration)
         );
     }
 
@@ -171,22 +173,38 @@ contract Presale is Crowdsale, Ownable {
         return Math.min(token().balanceOf(_tokenWallet), token().allowance(_tokenWallet, address(this)));
     }
 
-    // Investment Boundary
+    // INVESTMENT BOUNDARY
+
+    /**
+     * @dev Gets the minimum contribution in wei
+     * @return The minimum contribution in wei
+     */
+    function minimumContribution() public view returns (uint256) {
+        return _minimumContribution;
+    }
+
+    /**
+     * @dev Gets the maximum contribution in wei
+     * @return The maximum contribution in wei
+     */
+    function maximumContribution() public view returns (uint256) {
+        return _maximumContribution;
+    }
 
     /**
      * @dev Sets the minimum contribution.
-     * @param minimumContribution The minimum contribution in wei.
+     * @param theMinimumContribution The minimum contribution in wei.
      */
-    function setMinimumContribution(uint256 minimumContribution) public onlyOwner {
-        _minimumContribution = minimumContribution;
+    function setMinimumContribution(uint256 theMinimumContribution) public onlyOwner {
+        _minimumContribution = theMinimumContribution;
     }
 
     /**
      * @dev Sets the maximum contribution.
-     * @param maximumContribution The maximum contribution in wei.
+     * @param theMaximumContribution The maximum contribution in wei.
      */
-    function setMaximumContribution(uint256 maximumContribution) public onlyOwner {
-        _maximumContribution = maximumContribution;
+    function setMaximumContribution(uint256 theMaximumContribution) public onlyOwner {
+        _maximumContribution = theMaximumContribution;
     }
 
     /**
@@ -196,7 +214,7 @@ contract Presale is Crowdsale, Ownable {
      */
     function _preValidatePurchase(address beneficiary, uint256 weiAmount) internal override onlyWhileOpen view {
         super._preValidatePurchase(beneficiary, weiAmount);
-        require(weiRaised().add(weiAmount) <= _cap, "CappedCrowdsale: cap exceeded");
+        require(weiRaised().add(weiAmount) <= _cap, "Cap exceeded");
         uint256 _totalContibutorContribution = _getTotalContibutorContribution(beneficiary, weiAmount);
         // solhint-disable-next-line max-line-length
         require(_totalContibutorContribution >= _minimumContribution && _totalContibutorContribution <= _maximumContribution, "Contribution must be between minimum and maximum");
@@ -259,6 +277,14 @@ contract Presale is Crowdsale, Ownable {
     */
      function tokenVestingCliffDuration() public view returns (uint256) {
         return _tokenVestingConfig.cliffDuration;
+     }
+
+      /**
+    * @dev Returns the token vesting cliff time.
+    * @return the token vesting cliff time.
+    */
+     function tokenVestingCliff() public view returns (uint256) {
+        return _tokenVestingConfig.cliff;
      }
 
     /**
@@ -345,9 +371,9 @@ contract Presale is Crowdsale, Ownable {
      * @param newClosingTime Crowdsale closing time
      */
     function _extendTime(uint256 newClosingTime) internal {
-        require(!hasClosed(), "TimedCrowdsale: already closed");
+        require(!hasClosed(), "Crowdsale already closed");
         // solhint-disable-next-line max-line-length
-        require(newClosingTime > _closingTime, "TimedCrowdsale: new closing time is before current closing time");
+        require(newClosingTime > _closingTime, "New closing time is before current closing time");
         emit TimedCrowdsaleExtended(_closingTime, newClosingTime);
         _closingTime = newClosingTime;
     }
