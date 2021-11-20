@@ -2,23 +2,15 @@ const { BigNumber } = require('@ethersproject/bignumber');
 const { expect, use } = require('chai')
 const { solidity } = require('ethereum-waffle')
 
-const { parseTimeForContract } = require('../functions/functions')
+const { parseTimeForContract, wait } = require('../functions/functions')
 const deployPresale = require('../functions/deployPresale');
-const { parseEther, parseUnits } = require('@ethersproject/units');
+const { parseEther } = require('@ethersproject/units');
 const provider = require('../provider');
 
 use(solidity);
 
 const minimumContribution = parseEther('1').toString();
 const maximumContribution = parseEther('10').toString();
-
-const wait = function (ms = 2000) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve()
-        }, ms);
-    });
-}
 
 const createOpenedPresale = async (presaleOptions = {}) => {
     const openingTime = new Date(Date.now() + 2000); // adding a second
@@ -276,7 +268,6 @@ describe('Buying of Presale tokens', () => {
         await presale.connect(user1Wallet).buyTokens(user1Wallet.address, { value: amountUsed.toString() });
         await createDistraction(wallets); // Create a distraction
         const recieverFinalBalance = await reciever.getBalance();
-        const user1WalletFinalBalance = await user1Wallet.getBalance();
         expect(recieverFinalBalance.gt(recieverInitialBalance)).to.be.true;
     }).timeout(7000)
 

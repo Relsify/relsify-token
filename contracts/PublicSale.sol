@@ -38,7 +38,7 @@ contract PublicSale is Crowdsale, Ownable {
      * @dev Reverts if not in crowdsale time range.
      */
     modifier onlyWhileOpen {
-        require(isOpen(), "TimedCrowdsale: not open");
+        require(isOpen(), "Crowdsale not open");
         _;
     }
 
@@ -55,14 +55,14 @@ contract PublicSale is Crowdsale, Ownable {
     )
         Crowdsale(rate, wallet, token)
     {
-        require(theCap > 0, "CappedCrowdsale: cap is 0");
+        require(theCap > 0, "Cap is 0");
         // solhint-disable-next-line not-rely-on-time
-        require(theOpeningTime >= block.timestamp, "TimedCrowdsale: opening time is before current time");
+        require(theOpeningTime >= block.timestamp, "Opening time is before current time");
         // solhint-disable-next-line max-line-length
-        require(theClosingTime > theOpeningTime, "TimedCrowdsale: opening time is not before closing time");
+        require(theClosingTime > theOpeningTime, "Opening time is not before closing time");
         // solhint-disable-next-line max-line-length
         require(theMinimumContribution <= theMaximumContribution, "Minimum contribution must be less than or equal to maximum contribution");
-        require(theTokenWallet != address(0), "AllowanceCrowdsale: token wallet is the zero address");
+        require(theTokenWallet != address(0), "Token wallet is the zero address");
         _tokenWallet = theTokenWallet;
         _minimumContribution = theMinimumContribution;
         _maximumContribution = theMaximumContribution;
@@ -153,19 +153,35 @@ contract PublicSale is Crowdsale, Ownable {
     // Investment Boundary
 
     /**
-     * @dev Sets the minimum contribution.
-     * @param minimumContribution The minimum contribution in wei.
+     * @dev Gets the minimum contribution in wei
+     * @return The minimum contribution in wei
      */
-    function setMinimumContribution(uint256 minimumContribution) public onlyOwner {
-        _minimumContribution = minimumContribution;
+    function minimumContribution() public view returns (uint256) {
+        return _minimumContribution;
+    }
+
+    /**
+     * @dev Gets the maximum contribution in wei
+     * @return The maximum contribution in wei
+     */
+    function maximumContribution() public view returns (uint256) {
+        return _maximumContribution;
+    }
+
+    /**
+     * @dev Sets the minimum contribution.
+     * @param theMinimumContribution The minimum contribution in wei.
+     */
+    function setMinimumContribution(uint256 theMinimumContribution) public onlyOwner {
+        _minimumContribution = theMinimumContribution;
     }
 
     /**
      * @dev Sets the maximum contribution.
-     * @param maximumContribution The maximum contribution in wei.
+     * @param theMaximumContribution The maximum contribution in wei.
      */
-    function setMaximumContribution(uint256 maximumContribution) public onlyOwner {
-        _maximumContribution = maximumContribution;
+    function setMaximumContribution(uint256 theMaximumContribution) public onlyOwner {
+        _maximumContribution = theMaximumContribution;
     }
 
      /**
@@ -183,7 +199,7 @@ contract PublicSale is Crowdsale, Ownable {
      */
     function _preValidatePurchase(address beneficiary, uint256 weiAmount) internal override onlyWhileOpen view {
         super._preValidatePurchase(beneficiary, weiAmount);
-        require(weiRaised().add(weiAmount) <= _cap, "CappedCrowdsale: cap exceeded");
+        require(weiRaised().add(weiAmount) <= _cap, "Cap exceeded");
         uint256 _totalContibutorContribution = _getTotalContibutorContribution(beneficiary, weiAmount);
         // solhint-disable-next-line max-line-length
         require(_totalContibutorContribution >= _minimumContribution && _totalContibutorContribution <= _maximumContribution, "Contribution must be between minimum and maximum");
@@ -225,10 +241,9 @@ contract PublicSale is Crowdsale, Ownable {
      * @param newClosingTime Crowdsale closing time
      */
     function _extendTime(uint256 newClosingTime) internal {
-        require(!hasClosed(), "TimedCrowdsale: already closed");
+        require(!hasClosed(), "Crowdsale already closed");
         // solhint-disable-next-line max-line-length
-        require(newClosingTime > _closingTime, "TimedCrowdsale: new closing time is before current closing time");
-
+        require(newClosingTime > _closingTime, "New closing time is before current closing time");
         emit TimedCrowdsaleExtended(_closingTime, newClosingTime);
         _closingTime = newClosingTime;
     }
