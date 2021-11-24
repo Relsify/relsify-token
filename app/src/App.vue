@@ -194,7 +194,7 @@
                                 placeholder="address"
                                 value="0xf70B82b04d828106386D9AB916FAf0746E128aB7"
                                 aria-describedby="inputGroupPrepend"
-                              />
+                              /> 
                               <div class="input-group-prepend">
                                 <span class="input-group-text">
                                   <button
@@ -248,17 +248,10 @@
                 </div>
                 <div class="text-sm mt-1 text-moralis-green font-semibold">
                   Powered by Vue.js
+                  <button @click="actionButton">Action Button</button>
+                  <button @click="connectWeb3">Connect wallet</button>
+                  <button @click="connectWalletConnect">Connect wallet Using Wallet Connect</button>
                 </div>
-              </div>
-              <div class="mt-10">
-                <template v-if="isAuthenticated">
-                  {{ user.get("ethAddress") }}
-                  <button @click="logout">Logout</button>
-                </template>
-                <template v-else>
-                  <button @click="login">Connect wallet</button>
-                  <button @click="loginWalletConnect">Connect wallet Using Wallet Connect</button>
-                </template>
               </div>
             </div>
           </div>
@@ -284,16 +277,30 @@ export default {
     const store = useStore();
     const $moralis = inject("$moralis");
 
-    const setUser = (payload) => store.commit("setUser", payload);
+    // const setUser = (payload) => store.commit("setUser", payload);
 
-    const login = async () => {
-      const user = await $moralis.Web3.authenticate();
-       console.log(user);
-      setUser(user);
+    const connectWeb3 = async () => {
+      const isMetaMaskInstalled= await $moralis.isMetaMaskInstalled();
+      console.log(isMetaMaskInstalled) 
+      if(isMetaMaskInstalled){
+         window.web3 = await $moralis.enableWeb3();
+        // const user = await $moralis.getUser(web3);
+        const isWeb3Active = $moralis.ensureWeb3IsInstalled()
+        if (isWeb3Active) {
+          console.log("Activated");
+        } else {
+          await $moralis.enable();
+        }
+        // setUser(user);
+      }
+     
     };
 
-    const loginWalletConnect = async () => {
-      const user = await $moralis.Web3.authenticate({
+    const connectWalletConnect = async () => {
+       const isMetaMaskInstalled = await $moralis.isMetaMaskInstalled();
+      console.log(isMetaMaskInstalled) 
+      if(isMetaMaskInstalled){
+         await $moralis.enableWeb3({
         provider: "walletconnect",
         mobileLinks: [
           "rainbow",
@@ -303,20 +310,33 @@ export default {
           "imtoken",
           "pillar",
         ]
-        }); 
-        setUser(user);
+        });
+        // const user = await $moralis.getUser(web3);
+        const isWeb3Active = $moralis.ensureWeb3IsInstalled()
+        if (isWeb3Active) {
+          console.log("Activated");
+        } else {
+          await $moralis.enable();
+        }
+        // setUser(user);
+      }
+    }
+
+    const actionButton = async () => {
+       console.log(await store.dispatch("minimumContribution"));
     }
 
     const logout = async () => {
-      await $moralis.User.logOut();
-      setUser({});
+      // await $moralis.User.logOut();
+      // setUser({});
+      console.log('Logout triggered')
     };
 
     const handleCurrentUser = () => {
-      const user = $moralis.User.current();
-      if (user) {
-        setUser(user);
-      }
+      // const user = $moralis.User.current();
+      // if (user) {
+      //   setUser(user);
+      // }
     };
 
     onMounted(() => {
@@ -324,10 +344,11 @@ export default {
     });
 
     return {
-      login,
-      loginWalletConnect,
+      connectWeb3,
+      connectWalletConnect,
+      actionButton,
       logout,
-      isAuthenticated: computed(() => Object.keys(store.state.user).length > 0),
+      // isAuthenticated: computed(() => Object.keys(store.state.user).length > 0),
       user: computed(() => store.state.user),
     };
   },

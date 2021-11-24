@@ -300,7 +300,7 @@ contract Presale is Crowdsale, Ownable {
     * @dev Returns the amount tokens vested that can be released in wei.
     * @return the amount tokens vested that can be released in wei.
     */
-     function tokensReleasableAmount () public view onlyWhenTokenVestingIsSet returns (uint256) {
+     function tokensVestedReleasableAmount () public view onlyWhenTokenVestingIsSet returns (uint256) {
         TokenVesting vesting = TokenVesting(vestings[msg.sender]);
         return vesting.releasableAmount(token());
      }
@@ -331,7 +331,7 @@ contract Presale is Crowdsale, Ownable {
     /**
      * @dev Released the token vested by the user
      */
-    function releaseTokenVested() public onlyWhenTokenVestingIsSet {
+    function releaseVestedTokens() public onlyWhenTokenVestingIsSet {
         TokenVesting vesting = TokenVesting(vestings[msg.sender]);
         vesting.release(token());
     }

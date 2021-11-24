@@ -215,16 +215,16 @@ describe('Buying of Presale tokens', () => {
         // The Cliff Should start
         await wait(3000 - (Date.now() - vestingStartTimePeriod))
         let cliffStartTimePeriod = new Date();
-        await presale.connect(commonUserWallet).releaseTokenVested();
-        expect('releaseTokenVested').to.be.calledOnContract(presale);
+        await presale.connect(commonUserWallet).releaseVestedTokens();
+        expect('releaseVestedTokens').to.be.calledOnContract(presale);
         const afterInitalReleaseBalance = BigNumber.from(await token.balanceOf(commonUserWallet.address))
         expect(afterInitalReleaseBalance.gt(commonUserBalance)).to.be.true;
 
         // Vesting Duration Ended
         await wait(4000 - (Date.now() - cliffStartTimePeriod));
         await createDistraction(wallets);
-        await presale.connect(commonUserWallet).releaseTokenVested();
-        expect('releaseTokenVested').to.be.calledOnContract(presale);
+        await presale.connect(commonUserWallet).releaseVestedTokens();
+        expect('releaseVestedTokens').to.be.calledOnContract(presale);
         const afterFinalReleaseBalance = BigNumber.from(await token.balanceOf(commonUserWallet.address))
         expect(afterFinalReleaseBalance.gt(afterInitalReleaseBalance)).to.be.true;
     }).timeout(20000)

@@ -19756,7 +19756,8 @@
     }
   },
   "schemaVersion": "3.4.3",
-  "updatedAt": "2021-11-20T17:30:02.042Z",
+  "updatedAt": "2021-11-24T11:21:49.931Z",
+  "networkType": "ethereum",
   "devdoc": {
     "events": {
       "TimedCrowdsaleExtended(uint256,uint256)": {
