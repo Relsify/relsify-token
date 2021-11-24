@@ -11,12 +11,13 @@ function parseTimeForContract(date) {
   return date.getTime().toString().slice(0, 10);
 }
 
+const inFiveMinutesTime = new Date(Date.now() + (1000*60*5))
 // Presale configuration
 const presaleConfig = {
   rate: 400,
-  wallet: "0xf70B82b04d828106386D9AB916FAf0746E128aB7", // the wallet to recieve the BNB
+  wallet: "0x62f68aefEa93ee429fF77b74dd50f62fcEd379ca", // the wallet to recieve the BNB
   cap: web3.utils.toWei('7500000', 'ether'), // 7.5M of the tokens
-  openingTime: parseTimeForContract(new Date(2021, 10, 28, 13)),
+  openingTime: parseTimeForContract(inFiveMinutesTime),  // parseTimeForContract(new Date(2021, 10, 28, 13)),
   closingTime: parseTimeForContract(new Date(2021, 11, 11, 23)),
   contribution: {
     minimum: web3.utils.toWei('1', 'ether'),
@@ -74,23 +75,23 @@ module.exports = async function (deployer, network, accounts) {
    await relsifyToken.approve(presaleInstance.address, presaleConfig.cap);
 
   // Deploy the Public Sale Contract
-  await deployer.deploy(
-    PublicSale,
-    publicSaleConfig.rate,
-    publicSaleConfig.wallet,
-    relsifyToken.address,
-    accounts[0],
-    publicSaleConfig.cap,
-    publicSaleConfig.openingTime,
-    publicSaleConfig.closingTime,
-    publicSaleConfig.contribution.minimum,
-    publicSaleConfig.contribution.maximum
-  )
+  // await deployer.deploy(
+  //   PublicSale,
+  //   publicSaleConfig.rate,
+  //   publicSaleConfig.wallet,
+  //   relsifyToken.address,
+  //   accounts[0],
+  //   publicSaleConfig.cap,
+  //   publicSaleConfig.openingTime,
+  //   publicSaleConfig.closingTime,
+  //   publicSaleConfig.contribution.minimum,
+  //   publicSaleConfig.contribution.maximum
+  // )
 
   // Get the Public sale intance
-  const publicSaleInstance = await PublicSale.deployed();
+  // const publicSaleInstance = await PublicSale.deployed();
 
-  // Approve tokens for Public sale
-  await relsifyToken.approve(publicSaleInstance.address, publicSaleConfig.cap);
+  // // Approve tokens for Public sale
+  // await relsifyToken.approve(publicSaleInstance.address, publicSaleConfig.cap);
   
 };

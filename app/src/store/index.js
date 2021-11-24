@@ -1,4 +1,5 @@
-import { createStore } from 'vuex'
+import { createStore } from 'vuex';
+import actions from './actions'
 
 const store = createStore({
   state () {
@@ -6,11 +7,17 @@ const store = createStore({
       user: {}
     }
   },
+  getters: {
+    address() { },
+    balance(){},
+  },
   mutations: {
     setUser (state, payload) {
       state.user = payload
-    }
-  }
+    },
+    updateVesting() {},
+  },
+  actions
 })
 
 export default store

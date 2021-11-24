@@ -1,0 +1,4 @@
+export default {
+    TOKEN_CONTRACT_ADDRESS: "",
+    PRESALE_CONTRACT_ADDRESS: ""
+}
