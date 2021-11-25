@@ -98,7 +98,7 @@
                         time, to the address used to purchase it
                       </p>
                     </div>
-                    <h4>1 BNB = 6,000 RELS token</h4>
+                    <h4>1 BNB = {{presaleAmountPerNativeCoin}} RELS token</h4>
                   </div>
                   <div class="mt-1" id="section-1">
                     <div
@@ -130,7 +130,8 @@
                               class="form-control"
                               id="bnb-input-value"
                               min="8.3"
-                              value="8.3"
+                              v-model="nativeCoinAmount"
+                              @keyup="onNativeCoinAmountChange"
                               placeholder="Amount"
                             />
                             <div class="input-group-prepend">
@@ -149,11 +150,9 @@
                               type="number"
                               class="form-control"
                               id="rels-input-value"
-                              onkeyup="onRelsValueChange"
-                              onchange="onRelsValueChange"
-                              value="49800"
-                              min="49800"
-                              placeholder="Amount"
+                              v-model="tokenAmount"
+                              @keyup="onTokenAmountChange"
+                              placeholder="Token Amount"
                             />
                             <div class="input-group-prepend">
                               <div class="input-group-text">RELS</div>
@@ -163,7 +162,11 @@
                       </div>
                     </div>
                     <div id="q-box__buttons">
-                      <button id="btn-buy-private-sale">Buy RELS Token</button>
+                      <button id="buy-token-button">Buy RELS Token</button>
+                    </div>
+                    <div id="q-box__buttons">
+                      <button id="connect-metamask-button"  @click="connectWeb3">Connect using Metamask</button>
+                      <button id="connect-walletconnect-button" @click="connectWalletConnect">Connect using Walletconnect</button>
                     </div>
                   </div>
 
@@ -215,7 +218,7 @@
                         </tr>
                         <tr>
                           <td>Amount</td>
-                          <td id="ammount-in-bnb">8.3 BNB (Smart Chain)</td>
+                          <td id="ammount-in-bnb">{{nativeCoinAmount}} BNB (Smart Chain)</td>
                         </tr>
                         <tr>
                           <td>Time remaining</td>
@@ -240,20 +243,6 @@
               </div>
             </form>
 
-            <div class="text-moralis-gray">
-              <img alt="Moralis logo" src="./assets/logo.svg" />
-              <div class="mt-4">
-                <div class="text-xl font-semibold">
-                  Moralis starter boilerplate
-                </div>
-                <div class="text-sm mt-1 text-moralis-green font-semibold">
-                  Powered by Vue.js
-                  <button @click="actionButton">Action Button</button>
-                  <button @click="connectWeb3">Connect wallet</button>
-                  <button @click="connectWalletConnect">Connect wallet Using Wallet Connect</button>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -268,7 +257,7 @@
 </template>
 
 <script>
-import { onMounted, inject, computed } from "vue";
+import { onMounted, inject, computed, ref } from "vue";
 import { useStore } from "vuex";
 
 export default {
@@ -277,77 +266,96 @@ export default {
     const store = useStore();
     const $moralis = inject("$moralis");
 
-    // const setUser = (payload) => store.commit("setUser", payload);
+    const setUserAddress = (payload) => store.commit("setUserAddress", payload);
+    const setMetamaskInstalled = (payload) => store.commit("setMetamaskInstalled", payload);
+    const setWeb3Active = (payload) => store.commit("setWeb3Active", payload);
 
-    const connectWeb3 = async () => {
+    const presaleAmountPerNativeCoin = computed(() => store.getters.presaleAmountPerNativeCoin );
+    const isWeb3Active = computed(() => store.store.isWeb3Active );
+    const isMetamaskInstalled = computed(() => store.store.isMetamaskInstalled );
+
+    const nativeCoinAmount = ref(store.state.presaleContractMinimumContribution);
+    const tokenAmount = ref(nativeCoinAmount.value * presaleAmountPerNativeCoin.value);
+
+    const connectWeb3 = async ($event) => {
+      $event.preventDefault();
       const isMetaMaskInstalled= await $moralis.isMetaMaskInstalled();
-      console.log(isMetaMaskInstalled) 
+      setMetamaskInstalled(isMetaMaskInstalled)
       if(isMetaMaskInstalled){
          window.web3 = await $moralis.enableWeb3();
-        // const user = await $moralis.getUser(web3);
-        const isWeb3Active = $moralis.ensureWeb3IsInstalled()
-        if (isWeb3Active) {
-          console.log("Activated");
-        } else {
+         const userAddress = (await window.web3.eth.getAccounts())[0];
+         setUserAddress(userAddress)
+        const isWeb3Active = $moralis.ensureWeb3IsInstalled();
+        setWeb3Active(isWeb3Active)
+        if (!isWeb3Active) {
           await $moralis.enable();
         }
-        // setUser(user);
       }
-     
     };
 
-    const connectWalletConnect = async () => {
-       const isMetaMaskInstalled = await $moralis.isMetaMaskInstalled();
-      console.log(isMetaMaskInstalled) 
-      if(isMetaMaskInstalled){
-         await $moralis.enableWeb3({
-        provider: "walletconnect",
-        mobileLinks: [
-          "rainbow",
-          "metamask",
-          "argent",
-          "trust",
-          "imtoken",
-          "pillar",
-        ]
-        });
-        // const user = await $moralis.getUser(web3);
-        const isWeb3Active = $moralis.ensureWeb3IsInstalled()
-        if (isWeb3Active) {
-          console.log("Activated");
-        } else {
-          await $moralis.enable();
-        }
-        // setUser(user);
+    const connectWalletConnect = async ($event) => {
+       $event.preventDefault();
+      window.web3 = await $moralis.enableWeb3({
+      provider: "walletconnect",
+      mobileLinks: [
+        "rainbow",
+        "metamask",
+        "argent",
+        "trust",
+        "imtoken",
+        "pillar",
+      ]
+      });
+      setUserAddress((await window.web3.eth.getAccounts())[0])
+      const isWeb3Active = $moralis.ensureWeb3IsInstalled()
+      setWeb3Active(isWeb3Active);
+      if (!isWeb3Active) {
+        await $moralis.enable();
       }
+      // setUser(user);
     }
 
-    const actionButton = async () => {
-       console.log(await store.dispatch("minimumContribution"));
+    const buyTokens = async ($event) => {
+      $event.preventDefault();
+      const amount = nativeCoinAmount.value;
+      const beneficiary = store.state.userAddress;
+      store.dispatch("buyTokens", { amount, beneficiary });
     }
 
-    const logout = async () => {
-      // await $moralis.User.logOut();
-      // setUser({});
-      console.log('Logout triggered')
-    };
+    const releaseVestedTokens = async ($event) => {
+      $event.preventDefault();
+      store.dispatch("releaseVestedTokens")
+    }
 
-    const handleCurrentUser = () => {
-      // const user = $moralis.User.current();
-      // if (user) {
-      //   setUser(user);
-      // }
-    };
+    const actionButton = async () => {}
+  
+    const onTokenAmountChange = async ($event) => {
+      nativeCoinAmount.value = Number($event.target.value) / presaleAmountPerNativeCoin.value;
+    }
+
+    const onNativeCoinAmountChange = async ($event) => {
+      tokenAmount.value = Number($event.target.value) * presaleAmountPerNativeCoin.value;
+    }
+   
+
 
     onMounted(() => {
-      handleCurrentUser();
+      // handleCurrentUser();
     });
 
     return {
       connectWeb3,
       connectWalletConnect,
       actionButton,
-      logout,
+      isWeb3Active,
+      isMetamaskInstalled,
+      tokenAmount,
+      nativeCoinAmount,
+      onTokenAmountChange,
+      onNativeCoinAmountChange,
+      presaleAmountPerNativeCoin,
+      buyTokens,
+      releaseVestedTokens,
       // isAuthenticated: computed(() => Object.keys(store.state.user).length > 0),
       user: computed(() => store.state.user),
     };
@@ -523,8 +531,10 @@ label {
 
 button#prev-btn,
 button#next-btn,
-#btn-buy-private-sale,
+#buy-token-button,
 #btn-go-back-button,
+#connect-metamask-button,
+#connect-walletconnect-button,
 #done-button,
 button#submit-btn {
   font-size: 17px;
@@ -533,7 +543,7 @@ button#submit-btn {
   width: 200px;
   height: 60px;
   background: #10cb6c;
-  margin: 0 auto;
+  margin: 10px;
   /* margin-top: 40px; */
   overflow: hidden;
   z-index: 1;
@@ -542,12 +552,9 @@ button#submit-btn {
   text-align: center;
   color: #fff;
   border: 0;
-  -webkit-border-bottom-right-radius: 5px;
-  -webkit-border-bottom-left-radius: 5px;
-  -moz-border-radius-bottomright: 5px;
-  -moz-border-radius-bottomleft: 5px;
-  border-bottom-right-radius: 5px;
-  border-bottom-left-radius: 5px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  -moz-border-radius: 5px;
 }
 
 button#prev-btn:after,

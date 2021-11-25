@@ -5,6 +5,7 @@ import RelsifyTokenABI from '../../../build/contracts/RelsifyToken.json'
 
 import config from '../config';
 
+const {CHAIN } = config;
 // const chain = 'bsc';
 const contractOptions = {
     // chain,
@@ -16,15 +17,15 @@ const presaleOptions = {
     abi: PresaleABI.abi,
 }
 
-// const tokenOptions = {
-//     ...contractOptions,
-//     address: config.TOKEN_CONTRACT_ADDRESS,
-//     abi: RelsifyTokenABI,
-// }
+const tokenOptions = {
+    ...contractOptions,
+    contractAddress: config.TOKEN_CONTRACT_ADDRESS,
+    abi: RelsifyTokenABI.abi,
+}
 
 
 export default  {
-    async buyTokens(context, { beneficiary, amount }) {
+    buyTokens(context, { beneficiary, amount }) {
         const options = {
             ...presaleOptions,
             functionName: "buyTokens",
@@ -43,7 +44,7 @@ export default  {
             const closingTime = await Moralis.executeFunction({ functionName: "closingTime", ...presaleOptions });
             const remainingTokens = await Moralis.executeFunction({ functionName: "remainingTokens", ...presaleOptions });
             const contributedAmount = await Moralis.executeFunction({ functionName: "contributedAmount", ...presaleOptions });
-            commit('setGeneralData', {
+            const data = {
                 minimumContribution: Number(Moralis.Units.FromWei(minimumContribution)),
                 maximumContribution: Number(Moralis.Units.FromWei(maximumContribution)),
                 rate: Number(rate),
@@ -52,7 +53,8 @@ export default  {
                 closingTime: new Date(closingTime * 1000),
                 remainingTokens: Number(Moralis.Units.FromWei(remainingTokens)),
                 contributedAmount: Number(Moralis.Units.FromWei(contributedAmount))
-            });
+            };
+            commit('setGeneralData', data);
         } catch (error) {
             console.error(error);
         }
@@ -102,62 +104,65 @@ export default  {
     },
     async loadTokenData({ commit }) {
         try {
-            const tokenContractAddress = await Moralis.executeFunction({ functionName: "token", ...presaleOptions });
-            const tokenContract = Moralis.Web3API.getContract(RelsifyTokenABI.abi, tokenContractAddress);
-            const name = await tokenContract.methods.name().call();
-            const symbol = await tokenContract.methods.symbol().call();
-            const decimals = await tokenContract.methods.decimals().call();
-            const totalSupply = await tokenContract.methods.totalSupply().call();
-            commit('setTokenData', {
+            const name = await Moralis.executeFunction({ functionName: "name", ...tokenOptions });
+            const symbol = await Moralis.executeFunction({ functionName: "symbol", ...tokenOptions });
+            const decimals = await Moralis.executeFunction({ functionName: "decimals", ...tokenOptions });
+            const totalSupply = await Moralis.executeFunction({ functionName: "totalSupply", ...tokenOptions });
+            const data = {
                 name,
                 symbol,
                 decimals,
                 totalSupply: Number(Moralis.Units.FromWei(totalSupply)),
-            });
+            }
+            commit('setTokenData', data);
         } catch (error) {
             console.error(error);
         }
     },
-    // On check
-    async loadTokenBalance({ commit }, address) {
+    async loadUserNativeBalance({ commit, state }) {
         try {
-            const tokenContractAddress = await Moralis.executeFunction({ functionName: "token", ...presaleOptions });
-            const tokenContract = Moralis.Web3API.getContract(RelsifyTokenABI.abi, tokenContractAddress);
-            const balance = await tokenContract.methods.balanceOf(address).call();
-            commit('setTokenBalance', {
-                balance: Number(Moralis.Units.FromWei(balance))
-            });
+            if (window.web3) {
+                const balance = await window.web3.eth.getBalance(state.userAddress)
+                const balanceFromWei = Moralis.Units.FromWei(balance);
+                console.log(balanceFromWei);
+                commit('setUserNativeBalance', balanceFromWei);
+            }
         } catch (error) {
             console.error(error);
         }
     },
-    // On check
-    async loadTokenAllowance({ commit }, address) {
+    async loadUserTokenBalance({ commit, state }) {
         try {
-            const tokenContractAddress = await Moralis.executeFunction({ functionName: "token", ...presaleOptions });
-            const tokenContract = Moralis.Web3API.getContract(RelsifyTokenABI.abi, tokenContractAddress);
-            const allowance = await tokenContract.methods.allowance(address, config.PRESALE_CONTRACT_ADDRESS).call();
-            commit('setTokenAllowance', {
-                allowance: Number(Moralis.Units.FromWei(allowance))
-            });
+            const options = { functionName: "balanceOf", ...tokenOptions, params: { account: state.userAddress } };
+            const balance = await Moralis.executeFunction(options);
+            commit('setUserTokenBalance', Number(Moralis.Units.FromWei(balance)));
         } catch (error) {
             console.error(error);
         }
     },
-    // Working on Safety
-    async ensureChainSafety({ commit }) {
+    async onAccountChange({ commit, dispatch }, address) {
+        try {
+            commit('setUserAddress', address);
+            dispatch('loadUserNativeBalance');
+            dispatch('loadUserTokenBalance');
+        } catch (error) {
+            console.error(error);
+        }
+    },
+    // Working on Making sure they are using the right Chain
+    async ensureChainSafety() {
         try {
             const chainId = await Moralis.Web3API.getChainId();
-            if (chainId !== config.CHAIN_ID) {
+            if (chainId !== CHAIN.ID) {
                  await Moralis.addNetwork({
-                    chainId: config.CHAIN_ID,
-                    chainName: config.CHAIN_NAME,
-                    currencyName: config.CURRENCY_NAME,
-                    currencySymbol: config.CURRENCY_SYMBOL,
-                    rpcUrl,
-                    blockExplorerUrl
+                    chainId: CHAIN.ID,
+                    chainName: CHAIN.NAME,
+                    currencyName: CHAIN.CURRENCY_NAME,
+                    currencySymbol: CHAIN.CURRENCY_SYMBOL,
+                    rpcUrl: CHAIN.RPC_URL,
+                    blockExplorerUrl: CHAIN.BLOCK_URL,
                 })
-                const chainIdHex = await Moralis.switchNetwork(config.CHAIN_ID);
+                 await Moralis.switchNetwork(CHAIN);
             }
         } catch (error) {
             console.error(error);

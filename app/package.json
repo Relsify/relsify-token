@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@walletconnect/web3-provider": "^1.6.6",
+    "bootstrap-vue": "^2.21.2",
     "core-js": "^3.6.5",
     "moralis": "0.0.90",
     "vue": "^3.0.0",

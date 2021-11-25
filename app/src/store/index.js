@@ -6,24 +6,24 @@ import config from '../config';
 const store = createStore({
   state () {
     return {
-      isWeb3Active: '',
-      isMetaMaskInstalled: '',
-      userBalance: '',
+      isWeb3Active: false,
+      isMetaMaskInstalled: false,
+      userBalance: 0,
       userAddress: '',
       tokenName: '',
       tokenSymbol: '',
       tokenDecimals: '',
       tokenTotalSupply: '',
-      userTokenBalance: '',
+      userTokenBalance: 0,
       presaleQrCodeImage: `https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=${config.PRESALE_CONTRACT_ADDRESS}&choe=UTF-8`,
       tokenContractAddress: config.TOKEN_CONTRACT_ADDRESS,
       presaleContractAddress: config.PRESALE_CONTRACT_ADDRESS,
       presaleContractClosingTime: '',
       presaleContractOpeningTime: '',
-      presaleContractRate: '',
+      presaleContractRate: 400,
       presaleContractCap: '',
-      presaleContractMinimumContribution: '',
-      presaleContractMaximumContribution: '',
+      presaleContractMinimumContribution: 1,
+      presaleContractMaximumContribution: 8,
       presaleContractVestingStartTime: '',
       presaleContractVestingCliffDuration: '',
       presaleContractVestingDuration: '',
@@ -36,8 +36,10 @@ const store = createStore({
     }
   },
   getters: {
-    address() { },
-    balance() {},
+    hasVesting() {},
+    presaleAmountPerNativeCoin(state) {
+      return state.presaleContractRate * 1;
+    },
   },
   mutations: {
     setUser (state, payload) {
@@ -66,6 +68,22 @@ const store = createStore({
       state.tokenSymbol = payload.symbol;
       state.tokenDecimals = payload.decimals;
       state.tokenTotalSupply = payload.totalSupply;
+    },
+    setUserTokenBalance(state, payload) {
+      state.userTokenBalance = payload;
+    },
+
+    setUserAddress(state, payload) {
+      state.userAddress = payload;
+    },
+    setUserNativeBalance(state, payload) {
+      state.userBalance = payload;
+    },
+    setMetamaskInstalled(state, payload) {
+      state.isMetaMaskInstalled = payload;
+    },
+    setWeb3Active(state, payload) {
+      state.isWeb3Active = payload;
     }
   },
   actions
