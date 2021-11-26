@@ -1,5 +1,6 @@
 import {createApp} from 'vue'
 // import { BootstrapVue, BootstrapVueIcons } from 'bootstrap-vue'
+import VueClipboard from 'vue-clipboard2'
 import App from './App.vue'
 import store from './store'
 import Moralis from './plugins/moralis'
@@ -16,6 +17,7 @@ import 'bootstrap-vue/dist/bootstrap-vue.css'
 createApp(App)
     .provide('$moralis', Moralis)
     .use(store)
+    .use(VueClipboard)
     // .use(BootstrapVue)
     // .use(BootstrapVueIcons)
     .mount('#app') 

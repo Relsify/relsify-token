@@ -33,6 +33,7 @@ const store = createStore({
       presaleContractVestedAmount: '',
       presaleContributedAmount: '',
       presaleContractRemainingTokens: '',
+      presaleContractVestingAddress: '',
     }
   },
   getters: {
@@ -40,6 +41,40 @@ const store = createStore({
     presaleAmountPerNativeCoin(state) {
       return state.presaleContractRate * 1;
     },
+    vesting(state) {
+      const startTime = state.presaleContractVestingStartTime ? state.presaleContractVestingStartTime : new Date();
+      let endTime;
+      if (startTime && state.presaleContractVestingDuration) {
+        endTime = new Date(startTime.getTime() + (Number(state.presaleContractVestingDuration) * 1000))
+      }
+      else {
+        endTime = new Date()
+       }
+      const cliff = state.presaleContractVestingCliff ? new Date(state.presaleContractVestingCliff): new Date();
+      return {
+        startTime,
+        endTime,
+        cliff,
+        released: state.presaleContractVestingReleased,
+        vested: state.presaleContractVestedAmount,
+        releasableAmount: state.presaleVestingReleasableAmount,
+        address: state.presaleContractVestingAddress,
+      }
+    },
+    formattedUserAddress(state) {
+      if (state.userAddress.length > 10) {
+        return state.userAddress.slice(0, 6) + '...' + state.userAddress.slice(-4);
+      } else {
+        return "";
+      }
+    },
+    hasVestingAccount(state) {
+      const condition = state.presaleContractVestingAddress !== ''
+        && state.presaleContractVestingAddress !== '0x0000000000000000000000000000000000000000'
+        && state.presaleContractVestingAddress !== '0x0000000000000000000000000000000000000000000000000000000000000000'
+        && state.presaleContractVestingAddress.length >= 10;
+      return condition;
+    }
   },
   mutations: {
     setUser (state, payload) {
@@ -53,6 +88,10 @@ const store = createStore({
       state.presaleContractMinimumContribution = payload.minimumContribution;
       state.presaleContractMaximumContribution = payload.maximumContribution;
       state.presaleContributedAmount = payload.contributedAmount;
+      console.log(payload)
+    },
+    setTokenVestingContractAddress(state, payload) {
+      state.presaleContractVestingAddress = payload;
     },
     setVestingData(state, payload) {
       state.presaleContractVestingStartTime = payload.vestingStartTime;
@@ -62,6 +101,7 @@ const store = createStore({
       state.presaleVestingReleasableAmount = payload.vestingReleasableAmount;
       state.presaleContractVestedAmount = payload.vestedAmount;
       state.presaleContractVestingReleased = payload.vestingReleased;
+      console.log(payload)
     },
     setTokenData(state, payload) {
       state.tokenName = payload.name;

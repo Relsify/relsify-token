@@ -34,8 +34,11 @@ export default  {
         };
         return Moralis.executeFunction(options);
     },
-    async loadGeneralData({commit}) {
+    async loadGeneralData({commit, state}) {
         try {
+            const web3 = await Moralis.enableWeb3();
+            const presaleContract = new web3.eth.Contract(PresaleABI.abi, config.PRESALE_CONTRACT_ADDRESS);
+            const contributedAmount = await presaleContract.methods.contributedAmount().call({from: state.userAddress});
             const minimumContribution = await Moralis.executeFunction({ functionName: "minimumContribution", ...presaleOptions });
             const maximumContribution = await Moralis.executeFunction({ functionName: "maximumContribution", ...presaleOptions });
             const rate = await Moralis.executeFunction({ functionName: "rate", ...presaleOptions });
@@ -43,7 +46,6 @@ export default  {
             const openingTime = await Moralis.executeFunction({ functionName: "openingTime", ...presaleOptions });
             const closingTime = await Moralis.executeFunction({ functionName: "closingTime", ...presaleOptions });
             const remainingTokens = await Moralis.executeFunction({ functionName: "remainingTokens", ...presaleOptions });
-            const contributedAmount = await Moralis.executeFunction({ functionName: "contributedAmount", ...presaleOptions });
             const data = {
                 minimumContribution: Number(Moralis.Units.FromWei(minimumContribution)),
                 maximumContribution: Number(Moralis.Units.FromWei(maximumContribution)),
@@ -59,16 +61,19 @@ export default  {
             console.error(error);
         }
     }, 
-    async loadVestingData({ commit }) {
+    async loadVestingData({ state, commit }) {
         try {
-            const vestingStartTime = await Moralis.executeFunction({ functionName: "tokenVestingStartTime", ...presaleOptions });
-            const vestingCliffDuration = await Moralis.executeFunction({ functionName: "tokenVestingCliffDuration", ...presaleOptions });
-            const vestingDuration = await Moralis.executeFunction({ functionName: "tokenVestingDuration", ...presaleOptions });
-            const vestingCliff = await Moralis.executeFunction({ functionName: "tokenVestingCliff", ...presaleOptions });
-            const vestingReleasableAmount = await Moralis.executeFunction({ functionName: "tokensVestedReleasableAmount", ...presaleOptions });
-            const vestingReleased = await Moralis.executeFunction({ functionName: "tokensVestedReleased", ...presaleOptions });
-            const vestedAmount = await Moralis.executeFunction({ functionName: "tokensVestedAmount", ...presaleOptions });
-            commit('setVestingData', {
+            const userAddress = state.userAddress;
+            const web3 = await Moralis.enableWeb3();
+            const presaleContract = new web3.eth.Contract(PresaleABI.abi, config.PRESALE_CONTRACT_ADDRESS);
+            const vestingStartTime = await presaleContract.methods.tokenVestingStartTime().call({ from: userAddress });
+            const vestingCliffDuration = await presaleContract.methods.tokenVestingCliffDuration().call({ from: userAddress });
+            const vestingDuration = await presaleContract.methods.tokenVestingDuration().call({ from: userAddress });
+            const vestingCliff = await presaleContract.methods.tokenVestingCliff().call({ from: userAddress });
+            const vestingReleasableAmount = await presaleContract.methods.tokensVestedReleasableAmount().call({ from: userAddress });
+            const vestingReleased = await presaleContract.methods.tokensVestedReleased().call({ from: userAddress });
+            const vestedAmount = await presaleContract.methods.tokensVestedAmount().call({ from: userAddress });
+            const data = {
                 vestingStartTime: new Date(vestingStartTime * 1000),
                 vestingCliffDuration: Number(vestingCliffDuration),
                 vestingDuration: Number(vestingDuration),
@@ -76,12 +81,16 @@ export default  {
                 vestingReleasableAmount: Number(Moralis.Units.FromWei(vestingReleasableAmount)),
                 vestedAmount: Number(Moralis.Units.FromWei(vestedAmount)),
                 vestingReleased: Number(Moralis.Units.FromWei(vestingReleased))
-            });
+            }
+            console.log(data);
+
+            commit('setVestingData', data);
+            // console.log(vestingStartTime)
         } catch (error) {
             console.error(error);
         }
     },
-    releaseTokensVested() {
+    releaseVestedTokens() {
         try {
             const options = {
                 ...presaleOptions,
@@ -93,10 +102,19 @@ export default  {
             console.error(error);
         }
     },
-    async getTokenVestingContractAdrdress() {
+    async loadTokenVestingContractAddress({commit, state, getters, dispatch}) {
         try {
-            const tokenVestedContractAddress = await Moralis.executeFunction({ functionName: "getTokenVesting", ...presaleOptions });
-            return tokenVestedContractAddress;
+            const web3 = await Moralis.enableWeb3();
+            const presaleContract = new web3.eth.Contract(PresaleABI.abi, config.PRESALE_CONTRACT_ADDRESS);
+            const tokenVestedContractAddress = await presaleContract.methods.getTokenVesting().call({ from: state.userAddress });
+            console.log(tokenVestedContractAddress);
+            commit('setTokenVestingContractAddress', tokenVestedContractAddress);
+            const hasVestingAccount = getters.hasVestingAccount;
+            console.log(hasVestingAccount);
+            console.log(await window.web3.eth.defaultAccount);
+            if (hasVestingAccount) {
+                await dispatch('loadVestingData');
+            }
         }
         catch (error) {
             console.error(error);
@@ -119,12 +137,21 @@ export default  {
             console.error(error);
         }
     },
+    async loadUserAddress({ commit }) {
+        try {
+            if (window.web3) {
+                const userAddress = window.web3.eth.defaultAccount || window.web3.eth.accounts[0];
+                commit('setUserAddress', userAddress);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    },
     async loadUserNativeBalance({ commit, state }) {
         try {
             if (window.web3) {
                 const balance = await window.web3.eth.getBalance(state.userAddress)
                 const balanceFromWei = Moralis.Units.FromWei(balance);
-                console.log(balanceFromWei);
                 commit('setUserNativeBalance', balanceFromWei);
             }
         } catch (error) {
@@ -149,6 +176,21 @@ export default  {
             console.error(error);
         }
     },
+    async loadNecessaryData({ state, dispatch }) {
+        try {
+            if (!state.userAddress) {
+                await dispatch('loadUserAddress');
+            }
+            await dispatch('loadGeneralData');
+            await dispatch('loadTokenData');
+            await dispatch('loadTokenVestingContractAddress');
+            await dispatch('loadUserTokenBalance');
+            await dispatch('loadUserNativeBalance');
+        } catch (error) {
+            console.error(error);
+        }
+    },
+
     // Working on Making sure they are using the right Chain
     async ensureChainSafety() {
         try {

@@ -40,82 +40,34 @@
               <div id="steps-container">
                 <div class="step">
                   <div class="mt-1">
-                    <!-- Modal -->
-                    <div
-                      class="modal fade"
-                      id="thanks-modal"
-                      tabindex="-1"
-                      role="dialog"
-                      aria-labelledby="exampleModalCenterTitle"
-                      aria-hidden="true"
-                    >
-                      <div
-                        class="modal-dialog modal-dialog-centered"
-                        role="document"
-                      >
-                        <div class="modal-content">
-                          <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLongTitle">
-                              Congratulations!
-                            </h5>
-                            <button
-                              type="button"
-                              class="close"
-                              data-dismiss="modal"
-                              aria-label="Close"
-                            >
-                              <span aria-hidden="true">&times;</span>
-                            </button>
-                          </div>
-                          <div class="modal-body">
-                            Congratulations for purchasing RELS tokens. Kindly
-                            note your tokens will be sent to you at a later date
-                            which will be communicated to you soon. And the
-                            token will be sent to the same BNB address you used
-                            to purchase the RELS token. Have a nice day
-                          </div>
-                          <div class="modal-footer">
-                            <button
-                              type="button"
-                              class="btn btn-secondary"
-                              data-dismiss="modal"
-                            >
-                              Close
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                     <h4 style="margin-bottom: 0px">Buy Rels Token</h4>
                     <div class="closing-text">
                       <p>
-                        Input the amount you want to purchase, then click on the
-                        "Buy RELS Token" button to continue.
-                      </p>
-                      <p>
-                        Kindly note, your RELS token will be issued at a later
-                        time, to the address used to purchase it
+                        Connect your wallet, input the amount you want to purchase, then click on the
+                        "Buy RELS Token" button to continue. Kindly note, your RELS token will be vested over a period of time.
                       </p>
                     </div>
                     <h4>1 BNB = {{presaleAmountPerNativeCoin}} RELS token</h4>
+                    <div v-if="isWeb3Active">
+                        <table class="center">
+                          <tr>
+                            <td>Address: </td>
+                            <td>{{formattedUserAddress}}</td>
+                          </tr>
+                          <tr>
+                            <td>BNB Balance: </td>
+                            <td>{{Number(userBalance).toFixed(3)}} BNB</td>
+                          </tr>
+                          <tr>
+                            <td> Amount Contributed:  </td>
+                            <td> {{Number(presaleContributedAmount).toFixed(3)}} BNB</td>
+                          </tr>
+                        </table>
+                        <br>
+                    </div>
                   </div>
-                  <div class="mt-1" id="section-1">
-                    <div
-                      class="alert alert-info"
-                      id="minimum-alert"
-                      role="alert"
-                    >
-                      The mimimum amount is 8.3 BNB ($5,000)
-                    </div>
-                    <div
-                      class="alert alert-info"
-                      id="maximum-alert"
-                      role="alert"
-                    >
-                      The maximum amount is 16.7 BNB ($10,000)
-                    </div>
 
+                  <div class="mt-1" id="section-1" v-if="section1Toggle">
                     <div class="row">
                       <div class="col-lg-12" style="margin-bottom: 20px">
                         <div class="form-group row">
@@ -161,17 +113,20 @@
                         </div>
                       </div>
                     </div>
-                    <div id="q-box__buttons">
-                      <button id="buy-token-button">Buy RELS Token</button>
+                    <div id="q-box__buttons"  v-if="isWeb3Active">
+                      <button id="buy-token-button" @click="buyTokens">Buy RELS Token</button>
                     </div>
-                    <div id="q-box__buttons">
+                    <div id="q-box__buttons" v-if="!isWeb3Active">
                       <button id="connect-metamask-button"  @click="connectWeb3">Connect using Metamask</button>
                       <button id="connect-walletconnect-button" @click="connectWalletConnect">Connect using Walletconnect</button>
+                    </div>
+                    <div id="q-box__buttons" v-if="!isWeb3Active">
+                      <button class="btn btn-outline-primary btn-lg btn-block" id="connect-no-wallet"  @click="buyWithoutWeb3">Buy without using Web3 </button>
                     </div>
                   </div>
 
                   <!--- Section 2-->
-                  <div class="mt-1" id="section-2">
+                  <div class="mt-1" id="section-2" v-if="section2Toggle">
                     <div class="closing-text" style="margin-top: 0px">
                       <p>
                         Send the required amount of BNB to purchase you RELS
@@ -180,7 +135,7 @@
                     </div>
                     <img
                       class="center"
-                      src="@/assets/images/rels-ps-qr-code.png"
+                      :src="presaleQrCodeImage"
                     />
 
                     <table class="table">
@@ -195,14 +150,17 @@
                                 id="bnb-address-input-copy"
                                 disabled
                                 placeholder="address"
-                                value="0xf70B82b04d828106386D9AB916FAf0746E128aB7"
+                                :value="presaleContractAddress"
                                 aria-describedby="inputGroupPrepend"
                               /> 
                               <div class="input-group-prepend">
                                 <span class="input-group-text">
                                   <button
                                     id="bnb-address-copy-button"
-                                    data-clipboard-text="0xf70B82b04d828106386D9AB916FAf0746E128aB7"
+                                    data-clipboard-text="{{presaleContractAddress}}"
+                                    v-clipboard:copy="presaleContractAddress"
+                                    v-clipboard:success="onPresaleContractAddressCopy"
+                                    @click="onPresaleContractAddressCopy"
                                     style="
                                       padding: 0px;
                                       border: 0px solid;
@@ -223,22 +181,64 @@
                         <tr>
                           <td>Time remaining</td>
                           <td>
-                            <span id="time-remaining">15</span> mins remaining
+                            <span id="time-remaining">{{displayTimer}} </span> mins remaining
                           </td>
                         </tr>
                       </tbody>
                     </table>
                     <div id="q-box__buttons">
-                      <button id="btn-go-back-button">Go Back</button>
+                      <button id="btn-go-back-button" @click="goBackButton">Go Back</button>
                       <button
                         id="done-button"
                         data-toggle="modal"
                         data-target="#thanks-modal"
+                        @click="doneButton"
                       >
                         Done
                       </button>
                     </div>
                   </div>
+
+
+                  <!--- Section 3-->
+                  <div class="mt-1" id="section-2" v-if="isWeb3Active && hasVestingAccount">
+                    <div class="closing-text" style="margin-top: 20px">
+                     <h4>Vesting Destails</h4>
+                    </div>
+                    <table class="table">
+                      <tbody>
+                        <tr>
+                          <td>Vesting Address: </td>
+                          <td>{{vesting.address}} </td>
+                        </tr>
+                        <tr>
+                          <td>Start Date: </td>
+                          <td> {{vesting.startTime}}</td>
+                        </tr>
+                        <tr>
+                          <td>Cliff: </td>
+                          <td> {{vesting.cliff}} </td>
+                        </tr>
+                        <tr>
+                          <td>End Date: </td>
+                          <td> {{vesting.endTime}} </td>
+                        </tr>
+                        <tr>
+                          <td>Vested: </td>
+                          <td> {{vesting.vested}} RELS</td>
+                        </tr>
+                        <tr>
+                          <td>Already Released: </td>
+                          <td> {{vesting.released}} RELS</td>
+                        </tr>
+                        <tr>
+                          <td>Releasable Amount: </td>
+                          <td> {{vesting.releasableAmount}} RELS <button id="release-vesting-button" @click="releaseVestedTokens">Release Vesting</button> </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
                 </div>
               </div>
             </form>
@@ -259,6 +259,7 @@
 <script>
 import { onMounted, inject, computed, ref } from "vue";
 import { useStore } from "vuex";
+import Swal from 'sweetalert2'
 
 export default {
   name: "App",
@@ -271,11 +272,32 @@ export default {
     const setWeb3Active = (payload) => store.commit("setWeb3Active", payload);
 
     const presaleAmountPerNativeCoin = computed(() => store.getters.presaleAmountPerNativeCoin );
-    const isWeb3Active = computed(() => store.store.isWeb3Active );
-    const isMetamaskInstalled = computed(() => store.store.isMetamaskInstalled );
+    const presaleContractAddress = computed(() => store.state.presaleContractAddress );
+    const presaleQrCodeImage = computed(() => store.state.presaleQrCodeImage );
+    const minimumContribution = computed(() => store.state.presaleContractMinimumContribution)
+    const maximumContribution = computed(() => store.state.presaleContractMaximumContribution)
+    const isWeb3Active =  computed(() => store.state.isWeb3Active);
+    const isMetamaskInstalled = computed(() => store.state.isMetamaskInstalled);
 
     const nativeCoinAmount = ref(store.state.presaleContractMinimumContribution);
     const tokenAmount = ref(nativeCoinAmount.value * presaleAmountPerNativeCoin.value);
+
+    const section1Toggle = ref(true);
+    const section2Toggle = ref(false);
+
+    const displayTimer = ref(0);
+
+    const Toast = Swal.mixin({
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 4000,
+      timerProgressBar: true,
+      didOpen: (toast) => {
+        toast.addEventListener('mouseenter', Swal.stopTimer)
+        toast.addEventListener('mouseleave', Swal.resumeTimer)
+      }
+    })
 
     const connectWeb3 = async ($event) => {
       $event.preventDefault();
@@ -289,7 +311,24 @@ export default {
         setWeb3Active(isWeb3Active)
         if (!isWeb3Active) {
           await $moralis.enable();
+          const isWeb3Active = $moralis.ensureWeb3IsInstalled();
+          setWeb3Active(isWeb3Active);
+          if (setWeb3Active) {
+            await store.dispatch("loadNecessaryData");
+          } else {
+            Toast.fire({
+            icon: 'error',
+            title: 'Could not connect to Metamask'
+          })
+          }
+        } else {
+          await store.dispatch("loadNecessaryData");
         }
+      } else {
+        Toast.fire({
+          icon: 'error',
+          title: 'Please install Metamask'
+        })
       }
     };
 
@@ -311,23 +350,102 @@ export default {
       setWeb3Active(isWeb3Active);
       if (!isWeb3Active) {
         await $moralis.enable();
+        const isWeb3Active = $moralis.ensureWeb3IsInstalled();
+        setWeb3Active(isWeb3Active);
+        if (isWeb3Active) {
+          await store.dispatch("loadNecessaryData");
+        } else {
+          Toast.fire({
+            icon: 'error',
+            title: 'Could not connect to Wallet Connect'
+          })
+        }
+      } else {
+        await store.dispatch("loadNecessaryData");
       }
-      // setUser(user);
+    }
+
+    const safeToBuy  = computed(() => {
+      if(!isWeb3Active.value){
+        return false;
+      }
+      if(!isMetamaskInstalled.value){
+        return false;
+      }
+      if(nativeCoinAmount.value < minimumContribution.value){
+        return false;
+      }
+      if(nativeCoinAmount.value > maximumContribution.value){
+        return false;
+      }
+      return true;
+    })
+
+    const checkSafetoBuyAndCreateAlert = () => {
+      const amount = nativeCoinAmount.value;
+      if (Number(amount) > Number(maximumContribution.value)) {
+        Toast.fire({
+          icon: 'error',
+          title: 'Maximum Contribution is ' + maximumContribution.value + ' BNB'
+        })
+        return false;
+      } else if (Number(amount) < Number(minimumContribution.value)) {
+        Toast.fire({
+          icon: 'error',
+          title: 'Minimum Contribution is ' + minimumContribution.value + ' BNB'
+        });
+        return false;
+      } else {
+        return true;
+      }
     }
 
     const buyTokens = async ($event) => {
       $event.preventDefault();
       const amount = nativeCoinAmount.value;
       const beneficiary = store.state.userAddress;
-      store.dispatch("buyTokens", { amount, beneficiary });
+      const safeCheck = checkSafetoBuyAndCreateAlert();
+      if (safeCheck) {
+        try {
+          Swal.fire({
+              html: '<h5>Loading...</h5>',
+              showConfirmButton: false,
+          });
+          await store.dispatch("buyTokens", { amount, beneficiary });
+          Swal.fire({
+            icon: 'success',
+            title: 'RELS bought successfully',
+            text: `You have successfully purchase ${tokenAmount.value} RELS token`
+          })
+          store.dispatch("loadNecessaryData");
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'An error occured'
+          })
+        }
+      }
+      
     }
 
     const releaseVestedTokens = async ($event) => {
-      $event.preventDefault();
-      store.dispatch("releaseVestedTokens")
+      try {
+        $event.preventDefault();
+        await store.dispatch("releaseVestedTokens");
+        Toast.fire({
+          icon: 'success',
+          title: 'Token has been released to your account'
+        });
+        store.dispatch("loadNecessaryData");
+      } catch(error) {
+        console.error(error)
+        Toast.fire({
+          icon: 'error',
+          title: 'An error occured'
+        })
+      }
     }
-
-    const actionButton = async () => {}
   
     const onTokenAmountChange = async ($event) => {
       nativeCoinAmount.value = Number($event.target.value) / presaleAmountPerNativeCoin.value;
@@ -336,28 +454,115 @@ export default {
     const onNativeCoinAmountChange = async ($event) => {
       tokenAmount.value = Number($event.target.value) * presaleAmountPerNativeCoin.value;
     }
-   
 
+    const onPresaleContractAddressCopy = async ($event) => {
+      $event.preventDefault();
+      window.navigator.clipboard.writeText(store.state.presaleContractAddress);
+      Toast.fire({
+        icon: 'success',
+        title: 'Address copied successfully'
+      })
+    }
+
+    const moveToSection1 = () => {
+      section1Toggle.value = true;
+      section2Toggle.value = false;
+    }
+
+    const moveToSection2 = () => {
+      section1Toggle.value = false;
+      section2Toggle.value = true;
+    }
+
+    const goBackButton = async ($event) => {
+      $event.preventDefault();
+      moveToSection1();
+    }
+
+    const doneButton = async ($event) => {
+      $event.preventDefault();
+      Swal.fire({
+        title: 'Congratulations',
+        text:  `
+        Congratulations for purchasing RELS tokens. Kindly
+        note your tokens will be vested over a period of time. And the
+        token will be released to the same BNB address you used
+        to purchase the RELS token. Have a nice day
+        `,
+        icon: 'success',
+      })
+      moveToSection1();
+    }
+
+    const buyWithoutWeb3 = ($event) => {
+       $event.preventDefault();
+      const safeCheck = checkSafetoBuyAndCreateAlert();
+        if (safeCheck) {
+          moveToSection2();
+          startTimer(60 * 15, displayTimer);
+        }
+    }
+
+    let previousTimer;
+
+    const startTimer = (duration, displayTimer) => {
+    var timer = duration, minutes, seconds;
+    if (previousTimer) {
+        clearInterval(previousTimer);
+    }
+    previousTimer = setInterval(function () {
+        minutes = parseInt(timer / 60, 10);
+        seconds = parseInt(timer % 60, 10);
+
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        displayTimer.value = minutes + ":" + seconds;
+
+        if (--timer < 0) {
+            timer = duration;
+        }
+    }, 1000);
+}
 
     onMounted(() => {
-      // handleCurrentUser();
+      if (isWeb3Active.value) {
+        store.dispatch("loadNecessaryData");
+      }
     });
 
     return {
       connectWeb3,
       connectWalletConnect,
-      actionButton,
-      isWeb3Active,
-      isMetamaskInstalled,
+      presaleContractAddress,
       tokenAmount,
       nativeCoinAmount,
       onTokenAmountChange,
       onNativeCoinAmountChange,
       presaleAmountPerNativeCoin,
       buyTokens,
+      buyWithoutWeb3,
       releaseVestedTokens,
+      presaleQrCodeImage,
+      onPresaleContractAddressCopy,
+      isWeb3Active,
+      isMetamaskInstalled,
+      goBackButton,
+      doneButton,
+      moveToSection1,
+      moveToSection2,
+      section1Toggle,
+      section2Toggle,
+      safeToBuy,
+      displayTimer,
+      formattedUserAddress: computed(() => store.getters.formattedUserAddress),
       // isAuthenticated: computed(() => Object.keys(store.state.user).length > 0),
       user: computed(() => store.state.user),
+      userBalance: computed(() => store.state.userBalance),
+      userAddress: computed(() => store.state.userAddress),
+      presaleContributedAmount: computed(() => store.state.presaleContributedAmount),
+      vesting: computed(() => store.getters.vesting),
+      hasVestingAccount: computed(() => store.getters.hasVestingAccount),
     };
   },
 };
@@ -883,5 +1088,30 @@ input[type="radio"]:hover {
 
 .alert-info {
   display: none;
+}
+
+#release-vesting-button {
+  margin-left: 10px;
+  padding: 5px;
+  border: 1px solid orange;
+  border-radius: 5px;
+  background-color: orange;
+  color: #00011c;
+}
+
+#release-vesting-button:hover {
+  border: 1px solid #10cb6c;
+  background-color: #10cb6c;
+  color: whitesmoke;
+}
+
+#connect-no-wallet {
+  color: #10cb6c;
+  border: 1px solid #10cb6c;
+}
+#connect-no-wallet:hover {
+  background-color: #10cb6c;
+  color: whitesmoke;
+  border: 1px solid #10cb6c;
 }
 </style>
