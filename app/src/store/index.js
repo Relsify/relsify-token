@@ -34,6 +34,8 @@ const store = createStore({
       presaleContributedAmount: '',
       presaleContractRemainingTokens: '',
       presaleContractVestingAddress: '',
+      presaleContractVestingTotal: '',
+      presaleContractVestingRemaining: '',
     }
   },
   getters: {
@@ -59,6 +61,8 @@ const store = createStore({
         vested: state.presaleContractVestedAmount,
         releasableAmount: state.presaleVestingReleasableAmount,
         address: state.presaleContractVestingAddress,
+        totalVesting: state.presaleContractVestingTotal,
+        remainingVesting: state.presaleContractVestingRemaining,
       }
     },
     formattedUserAddress(state) {
@@ -101,7 +105,8 @@ const store = createStore({
       state.presaleVestingReleasableAmount = payload.vestingReleasableAmount;
       state.presaleContractVestedAmount = payload.vestedAmount;
       state.presaleContractVestingReleased = payload.vestingReleased;
-      console.log(payload)
+      state.presaleContractVestingTotal = payload.vestingTotal;
+      state.presaleContractVestingRemaining = payload.vestingRemaining;
     },
     setTokenData(state, payload) {
       state.tokenName = payload.name;

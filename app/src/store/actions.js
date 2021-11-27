@@ -66,6 +66,7 @@ export default  {
             const userAddress = state.userAddress;
             const web3 = await Moralis.enableWeb3();
             const presaleContract = new web3.eth.Contract(PresaleABI.abi, config.PRESALE_CONTRACT_ADDRESS);
+            const tokenContract = new web3.eth.Contract(RelsifyTokenABI.abi, config.TOKEN_CONTRACT_ADDRESS);
             const vestingStartTime = await presaleContract.methods.tokenVestingStartTime().call({ from: userAddress });
             const vestingCliffDuration = await presaleContract.methods.tokenVestingCliffDuration().call({ from: userAddress });
             const vestingDuration = await presaleContract.methods.tokenVestingDuration().call({ from: userAddress });
@@ -73,14 +74,20 @@ export default  {
             const vestingReleasableAmount = await presaleContract.methods.tokensVestedReleasableAmount().call({ from: userAddress });
             const vestingReleased = await presaleContract.methods.tokensVestedReleased().call({ from: userAddress });
             const vestedAmount = await presaleContract.methods.tokensVestedAmount().call({ from: userAddress });
+            const vestingBalance = await tokenContract.methods.balanceOf(state.presaleContractVestingAddress).call();
+
+            const vestingTotal = Number(Moralis.Units.FromWei(vestingBalance)) + Number(Moralis.Units.FromWei(vestingReleased))
+            const vestedAmountInEth = Number(Moralis.Units.FromWei(vestedAmount));
             const data = {
                 vestingStartTime: new Date(vestingStartTime * 1000),
                 vestingCliffDuration: Number(vestingCliffDuration),
                 vestingDuration: Number(vestingDuration),
                 vestingCliff: new Date(vestingCliff * 1000),
                 vestingReleasableAmount: Number(Moralis.Units.FromWei(vestingReleasableAmount)),
-                vestedAmount: Number(Moralis.Units.FromWei(vestedAmount)),
-                vestingReleased: Number(Moralis.Units.FromWei(vestingReleased))
+                vestedAmount: vestedAmountInEth,
+                vestingReleased: Number(Moralis.Units.FromWei(vestingReleased)),
+                vestingTotal: vestingTotal,
+                vestingRemaining: vestingTotal - vestedAmountInEth,
             }
             console.log(data);
 

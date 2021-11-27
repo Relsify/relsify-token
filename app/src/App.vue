@@ -130,7 +130,7 @@
                     <div class="closing-text" style="margin-top: 0px">
                       <p>
                         Send the required amount of BNB to purchase you RELS
-                        token.
+                        token. Yoy may need to increase the gas limit than the base gas fee.
                       </p>
                     </div>
                     <img
@@ -223,8 +223,16 @@
                           <td>End Date: </td>
                           <td> {{vesting.endTime}} </td>
                         </tr>
+                         <tr>
+                          <td>Total Vesting: </td>
+                          <td> {{vesting.totalVesting}} RELS</td>
+                        </tr>
                         <tr>
-                          <td>Vested: </td>
+                          <td>Remaining Vesting: </td>
+                          <td> {{vesting.remainingVesting}} RELS</td>
+                        </tr>
+                        <tr>
+                          <td>Vested Amount: </td>
                           <td> {{vesting.vested}} RELS</td>
                         </tr>
                         <tr>
