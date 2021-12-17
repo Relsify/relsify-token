@@ -23,7 +23,7 @@ contract RelsifyToken is ERC20, ERC20Burnable, Pausable, AccessControl {
     event AddressFrozen(address indexed addr);
     event AddressUnfrozen(address indexed addr);
 
-    constructor() ERC20("RelsifyToken", "RELS") {
+    constructor() ERC20("Relsify Token", "RELS") {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(PAUSER_ROLE, msg.sender);
         _mint(msg.sender, 200000000 * 10 ** decimals());

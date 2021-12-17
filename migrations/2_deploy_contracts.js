@@ -15,7 +15,7 @@ const inFiveMinutesTime = new Date(Date.now() + (1000*60*5))
 // Presale configuration
 const presaleConfig = {
   rate: 400,
-  wallet: "0x62f68aefEa93ee429fF77b74dd50f62fcEd379ca", // the wallet to recieve the BNB
+  wallet: "0x260449294081981Ab8FD015395fd4e8eE688f610", // the wallet to recieve the BNB
   cap: web3.utils.toWei('7500000', 'ether'), // 7.5M of the tokens
   openingTime: parseTimeForContract(inFiveMinutesTime),  // parseTimeForContract(new Date(2021, 10, 28, 13)),
   closingTime: parseTimeForContract(new Date(2021, 11, 11, 23)),
